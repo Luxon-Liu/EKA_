@@ -6,35 +6,6 @@ EKA 把「政务档案原文 / 政策文件 / 业务数据」作为知识来源�
 
 ---
 
-## ✨ 功能特性
-
-- **流式对话**：`POST /agent/chat/stream` 以 SSE 推送，前端边生成边渲染；事件类型精简为 `STREAM_TEXT` / `TOOL_CALL_REQUEST` / `TOOL_CALL_RESULT` / `DONE` / `ERROR`。
-- **RAG 混合检索**：向量召回（DashScope `text-embedding-v3` + Elasticsearch）与 BM25 关键词召回并行，再经 `qwen3-vl-rerank` 重排序后返回，兼顾语义与精确匹配。
-- **文档解析与切块**：借助 Docling Serve 将 PDF 结构化，配合自定义切块器（token 预算、表格处理、页眉页脚过滤）入库。
-- **只读 SQL 查询**：Agent 通过 `SqlExecuteTool` 查询业务库，仅允许 `SELECT`，带库名白名单、行数上限与超时保护；表结构语义来自每表一份的 MD 数据字典。
-- **文件工具集**：列出 / 读取 / 写入 / 编辑会话文件，支持将结果导出为 PDF。
-- **多会话记忆**：会话与消息持久化到 MySQL；长会话超窗口时自动「摘要 + 保留最近原文」压缩；支持标题自动生成、改名、分页、模糊搜索与批量删除。
-- **登录鉴权**：JWT 自包含 token + Cookie，过滤器验签还原用户身份，用户与会话数据相互隔离。
-- **主备模型**：对话模型支持 DeepSeek 与通义千问（DashScope），一份主用、一份兜底。
-- **工具韧性**：工具调用具备超时、预算、错误分类与降级策略，避免单次调用拖垮整轮对话。
-
----
-
-## 🧱 技术栈
-
-| 分层 | 技术 |
-|---|---|
-| 后端语言 / 框架 | Java 17、Spring Boot 3.4.5、Spring MVC |
-| Agent 编排 | langchain4j 1.11.11（AiServices、工具调用、流式） |
-| 持久化 | MySQL 8 + MyBatis-Plus 3.5.7 |
-| 向量检索 | Elasticsearch（`langchain4j-elasticsearch`，索引 `eka-rag`） |
-| 模型服务 | 阿里云 DashScope（嵌入 `text-embedding-v3`、重排 `qwen3-vl-rerank`、通义千问）、DeepSeek |
-| 文档处理 | Docling Serve（解析）、Apache POI（docx/xlsx）、PDFBox、openhtmltopdf、jsoup |
-| 鉴权 | jjwt（HS256） |
-| 前端 | Next.js 16、React 19、TypeScript、Tailwind CSS 4、pnpm 10 |
-
----
-
 ## 📁 目录结构
 
 ```
@@ -223,39 +194,6 @@ pnpm install
 pnpm dev          # 打开 http://localhost:5173
 # 或 pnpm dev:open（自动打开浏览器）
 ```
-
----
-
-## 🔌 接口一览
-
-后端无统一 context-path，接口如下（`Result` 统一包裹，SSE 除外）：
-
-| 模块 | 方法 | 路径 | 说明 |
-|---|---|---|---|
-| 鉴权 | POST | `/auth/register` | 注册 |
-| 鉴权 | POST | `/auth/login` | 登录（写入 Cookie） |
-| 鉴权 | POST | `/auth/logout` | 登出 |
-| 鉴权 | GET | `/auth/me` | 当前登录用户 |
-| Agent | POST | `/agent/chat/stream` | 流式问答（SSE），body `{message, memoryId}` |
-| 会话 | GET | `/chat-memory/page` | 会话分页 |
-| 会话 | GET | `/chat-memory/content` | 会话消息内容 |
-| 会话 | GET | `/chat-memory/search` | 标题模糊搜索 |
-| 会话 | PUT | `/chat-memory/title` | 会话改名 |
-| 会话 | POST | `/chat-memory/title/generate` | 生成标题 |
-| 会话 | DELETE | `/chat-memory/batch` | 批量删除（body 为 ID 数组） |
-| 文件 | POST | `/file/upload` | 上传会话文件 |
-| 文件 | GET | `/file/list` | 会话文件列表 |
-| 文件 | GET | `/file/preview` | 文件预览 |
-| 文件 | GET | `/file/export` | 导出（PDF 等） |
-| RAG | POST | `/rag/ingest` | 文档入库（解析、切块、向量化） |
-
----
-
-## 🔐 安全说明
-
-- 仓库中**不包含**任何真实密钥、数据库口令或配置文件；`application.yml`、`MD/`、`File/`、`Edit-File/` 均已在 `.gitignore` 中排除。
-- 所有敏感配置请通过环境变量或本地 `application.yml` 注入，切勿提交到版本库。
-- SQL 工具仅执行只读查询，并受库名白名单、返回行数与超时限制。
 
 ---
 
