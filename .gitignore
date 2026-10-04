@@ -1,0 +1,40 @@
+# ===== 依赖与构建产物 =====
+node_modules/
+target/
+.next/
+out/
+dist/
+dist-ssr/
+*.tsbuildinfo
+*.class
+
+# ===== IDE / 编辑器 =====
+.idea/
+.vscode/
+.run/
+*.iml
+*.iws
+*.ipr
+*.suo
+
+# ===== 环境变量与本地敏感配置（严禁入库） =====
+.env
+.env.local
+.env.*.local
+*.local
+application.yml
+application-*.yml
+application.yaml
+application-*.yaml
+
+# ===== 运行时数据目录（档案原文、数据字典、会话文件等，不入库） =====
+MD/
+File/
+Edit-File/
+.playwright-mcp/
+
+# ===== 日志与系统文件 =====
+*.log
+logs/
+.DS_Store
+Thumbs.db
